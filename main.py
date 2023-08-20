@@ -153,3 +153,6 @@ def upload_image():
 if __name__ == '__main__':
     create_table() # 테이블 생성
     app.run()
+
+
+# just for check
