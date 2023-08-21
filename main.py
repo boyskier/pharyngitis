@@ -18,7 +18,35 @@ db_config = {
     'database': os.getenv('DB_DATABASE')
 }
 
-def create_table(table_name):
+def create_userinfo_table():
+    '''
+    Creates the userinfo table in the database.
+    user_name: user_name
+    password: password
+    birth_date: YYYYMMDD
+    gender: 0 = female, 1 = male
+    '''
+
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+
+    query = f"""
+    CREATE TABLE IF NOT EXISTS userinfo (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_name VARCHAR(255) UNIQUE,
+        password VARCHAR(255),
+        birth_date VARCHAR(8),
+        gender INT
+    );
+    """
+
+    cursor.execute(query)
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+
+def create_table(table_name): #table_name: pharyngitis, otoscope
     connection = mysql.connector.connect(**db_config)
     cursor = connection.cursor()
 
@@ -69,6 +97,55 @@ def process_image(uploaded_file, model, image_size):
     image_data = byte_stream.read()
     return probability, image_data
 
+@app.route('/signup', methods=['POST']) #회원가입 페이지
+def signup():
+    # 클라이언트로부터 정보 받기
+    user_name = request.json.get('user_name')
+    password = request.json.get('password')
+    birth_date = request.json.get('birth_date')
+    gender = request.json.get('gender') #1:male, 0:female
+
+    # 사용자 ID 중복 확인
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    cursor.execute(f"SELECT user_name FROM userinfo WHERE user_name = %s", (user_name,))
+    result = cursor.fetchone()
+
+    if result:
+        connection.close()
+        return jsonify({'status': 'error', 'message': 'User ID already exists'})
+
+    # 사용자 정보 저장
+    query = f"""
+    INSERT INTO userinfo (user_name, password, birth_date, gender) VALUES (%s, %s, %s, %s);
+    """
+    cursor.execute(query, (user_name, password, birth_date, gender))
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return jsonify({'status': 'success', 'message': 'User registered successfully'})
+
+@app.route('/signin', methods=['POST'])
+def signin():
+    user_name = request.json.get('user_name')
+    password = request.json.get('password')
+
+    # 데이터베이스에서 사용자 정보 조회
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    cursor.execute(f"SELECT password FROM userinfo WHERE user_name = %s", (user_name,))
+    result = cursor.fetchone()
+    connection.close()
+
+    # ID와 비밀번호 검증
+    if result and result[0] == password:
+        return jsonify({'status': 1})  # 인증 성공
+    else:
+        return jsonify({'status': 0})  # 인증 실패
+
+
+
 @app.route('/upload/<table_name>', methods=['POST'])
 def upload_image(table_name):
     uploaded_file = request.files['file']
@@ -96,4 +173,6 @@ def upload_image(table_name):
 if __name__ == '__main__':
     create_table('pharyngitis')
     create_table('otoscope')
+    create_userinfo_table()
     app.run()
+

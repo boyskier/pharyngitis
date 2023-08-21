@@ -14,8 +14,6 @@ db_config = {
     'database': os.getenv('DB_DATABASE')
 }
 
-
-
 # image_id로 부터 정보 확인
 def get_image_data(image_id, table_name): #table_name: pharyngitis, otoscope
     # DB 연결

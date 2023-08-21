@@ -22,4 +22,4 @@ def to_server(user_name='patient1', img_path='sample_images/2.JPG', mode='pharyn
     else:
         print(f"Error: {response.text}")
 
-to_server(user_name='patient2', img_path='sample_images/2.JPG', mode='otoscope')
+to_server(user_name='patient2', img_path='sample_images/150.JPG', mode='otoscope')
