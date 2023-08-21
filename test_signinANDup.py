@@ -26,7 +26,6 @@ duplicate_user = {
 response = requests.post('http://127.0.0.1:5000/signup', json=duplicate_user)
 print('Signup Response for duplicate user:', response.json())
 
-
 # 로그인 실험: 이미 등록된 사용자
 existing_user_login = {
     'user_name': 'user1',

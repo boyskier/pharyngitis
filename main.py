@@ -8,6 +8,7 @@ import mysql.connector
 import base64
 from dotenv import load_dotenv
 import os
+import bcrypt
 
 load_dotenv()
 
@@ -17,6 +18,7 @@ db_config = {
     'host': os.getenv('DB_HOST'),
     'database': os.getenv('DB_DATABASE')
 }
+
 
 def create_userinfo_table():
     '''
@@ -46,7 +48,7 @@ def create_userinfo_table():
     connection.close()
 
 
-def create_table(table_name): #table_name: pharyngitis, otoscope
+def create_table(table_name):  # table_name: pharyngitis, otoscope
     connection = mysql.connector.connect(**db_config)
     cursor = connection.cursor()
 
@@ -64,6 +66,7 @@ def create_table(table_name): #table_name: pharyngitis, otoscope
     connection.commit()
     cursor.close()
     connection.close()
+
 
 def save_image_to_db(user_name, image_data, probability, table_name):
     connection = mysql.connector.connect(**db_config)
@@ -84,6 +87,7 @@ otoscope_model = tf.keras.models.load_model("D:\\User\\my_coding_projects\\otosc
 
 app = Flask(__name__)
 
+
 def process_image(uploaded_file, model, image_size):
     byte_stream = io.BytesIO(uploaded_file.read())
     image = Image.open(byte_stream)
@@ -97,13 +101,15 @@ def process_image(uploaded_file, model, image_size):
     image_data = byte_stream.read()
     return probability, image_data
 
-@app.route('/signup', methods=['POST']) #회원가입 페이지
+
+@app.route('/signup', methods=['POST'])  # 회원가입 페이지
 def signup():
     # 클라이언트로부터 정보 받기
     user_name = request.json.get('user_name')
-    password = request.json.get('password')
+    password = request.json.get('password').encode('utf-8')  # 인코딩
+    hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())  # 해싱
     birth_date = request.json.get('birth_date')
-    gender = request.json.get('gender') #1:male, 0:female
+    gender = request.json.get('gender')  # 1:male, 0:female
 
     # 사용자 ID 중복 확인
     connection = mysql.connector.connect(**db_config)
@@ -117,19 +123,20 @@ def signup():
 
     # 사용자 정보 저장
     query = f"""
-    INSERT INTO userinfo (user_name, password, birth_date, gender) VALUES (%s, %s, %s, %s);
-    """
-    cursor.execute(query, (user_name, password, birth_date, gender))
+        INSERT INTO userinfo (user_name, password, birth_date, gender) VALUES (%s, %s, %s, %s);
+        """
+    cursor.execute(query, (user_name, hashed_password, birth_date, gender))
     connection.commit()
     cursor.close()
     connection.close()
 
     return jsonify({'status': 'success', 'message': 'User registered successfully'})
 
+
 @app.route('/signin', methods=['POST'])
 def signin():
     user_name = request.json.get('user_name')
-    password = request.json.get('password')
+    password = request.json.get('password').encode('utf-8')  # 인코딩
 
     # 데이터베이스에서 사용자 정보 조회
     connection = mysql.connector.connect(**db_config)
@@ -138,12 +145,11 @@ def signin():
     result = cursor.fetchone()
     connection.close()
 
-    # ID와 비밀번호 검증
-    if result and result[0] == password:
+    # ID와 비밀번호 검증 (해싱된 비밀번호와 비교)
+    if result and bcrypt.checkpw(password, result[0].encode('utf-8')):
         return jsonify({'status': 1})  # 인증 성공
     else:
         return jsonify({'status': 0})  # 인증 실패
-
 
 
 @app.route('/upload/<table_name>', methods=['POST'])
@@ -152,12 +158,11 @@ def upload_image(table_name):
     user_name = request.form['user_name']
 
     if table_name == 'pharyngitis':
-        image_size = (224,224)
+        image_size = (224, 224)
         model = pharyngitis_model
     else:
-        image_size = (500,500)
+        image_size = (500, 500)
         model = otoscope_model
-
 
     if uploaded_file.filename != '':
         probability, image_data = process_image(uploaded_file, model, image_size)
@@ -170,9 +175,9 @@ def upload_image(table_name):
     else:
         return {'error': 'No file uploaded'}
 
+
 if __name__ == '__main__':
     create_table('pharyngitis')
     create_table('otoscope')
     create_userinfo_table()
     app.run()
-
