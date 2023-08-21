@@ -60,27 +60,6 @@ def show_image_data_from_image_id(image_id, table_name):
         print(probability)
 
 
-# def show_all_images_by_user_name(user_name, table_name):
-#     connection = connect_db()
-#     cursor = connection.cursor()
-#     query = f"SELECT image_data, upload_time, probability FROM {table_name} WHERE user_name = '{user_name}';"
-#     cursor.execute(query)
-#     results = cursor.fetchall()
-#     close_db(connection, cursor)
-#
-#     if not results:
-#         print(f"No records found for user {user_name}")
-#         return None
-#
-#     total_images = len(results)
-#     print(f"Total {table_name} images for user {user_name}: {total_images}")
-#
-#     for image_data, upload_time, probability in results:
-#         title = f"{user_name}_{upload_time.strftime('%Y%m%d_%H%M%S')}_{probability:.3f}"
-#         show_image(image_data, title)
-#         print(f"Upload Time: {upload_time}")
-#         print(f"Probability: {probability}")
-
 def show_all_images_by_user_name(user_name, table_name):
     connection = connect_db()
     cursor = connection.cursor()
@@ -115,8 +94,6 @@ def show_all_images_by_user_name(user_name, table_name):
         ax.axis('off')
 
     plt.show()
-
-
 
 
 user_name = 'patient2'  # 원하는 환자 이름으로 수정
