@@ -3,15 +3,10 @@ import base64
 from PIL import Image
 import io
 
-def to_server(user_name = 'patient1', img_path = 'sample_images/2.JPG', mode='pharyngitis'):
-    url = f"http://localhost:5000/upload_{mode}"
-    data = {
-        'user_name': user_name
-    }
-
-    files = {
-        'file': open(img_path, 'rb')
-    }
+def to_server(user_name='patient1', img_path='sample_images/2.JPG', mode='pharyngitis'): #mode: pharyngitis, otscope
+    url = f"http://localhost:5000/upload/{mode}"
+    data = {'user_name': user_name}
+    files = {'file': open(img_path, 'rb')}
 
     response = requests.post(url, files=files, data=data)
 
