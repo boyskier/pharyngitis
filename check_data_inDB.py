@@ -17,13 +17,13 @@ db_config = {
 
 
 # image_id로 부터 정보 확인
-def get_image_data(image_id):
+def get_image_data(image_id, table_name): #table_name: pharyngitis, otoscope
     # DB 연결
     connection = mysql.connector.connect(**db_config)
     cursor = connection.cursor()
 
     # 이미지 데이터 불러오기
-    query = f"SELECT user_name, image_data, probability, upload_time FROM images WHERE id = {image_id};"  # 원하는 id 사용
+    query = f"SELECT user_name, image_data, probability, upload_time FROM {table_name} WHERE id = {image_id};"  # 원하는 id 사용
     cursor.execute(query)
     result = cursor.fetchone()
 
@@ -36,9 +36,8 @@ def get_image_data(image_id):
 
     return result
 
-
-def show_image_data_from_image_id(image_id):
-    user_name, image_data, probability, upload_time = get_image_data(image_id)
+def show_image_data_from_image_id(image_id, table_name): #table_name: pharyngitis, otoscope
+    user_name, image_data, probability, upload_time = get_image_data(image_id, table_name)
 
     # 바이트 스트림으로 이미지 열기
     image_stream = io.BytesIO(image_data)
@@ -54,13 +53,13 @@ def show_image_data_from_image_id(image_id):
 # 환자명을 받아서 모든 이미지 출력
 
 
-def show_all_images_by_user_name(user_name):
+def show_all_images_by_user_name(user_name, table_name): #table_name: pharyngitis, otoscope
     # DB 연결
     connection = mysql.connector.connect(**db_config)
     cursor = connection.cursor()
 
     # 환자 이름으로 이미지 데이터 불러오기
-    query = f"SELECT image_data, upload_time, probability FROM images WHERE user_name = '{user_name}';"
+    query = f"SELECT image_data, upload_time, probability FROM {table_name} WHERE user_name = '{user_name}';"
     cursor.execute(query)
     results = cursor.fetchall()
 
@@ -92,5 +91,5 @@ def show_all_images_by_user_name(user_name):
         print(f"Upload Time: {upload_time}")
         print(f"Probability: {probability}")
 
-user_name = 'patient1'  # 원하는 환자 이름으로 수정
-show_all_images_by_user_name(user_name)
+user_name = 'patient2'  # 원하는 환자 이름으로 수정
+show_all_images_by_user_name(user_name, 'otoscope')

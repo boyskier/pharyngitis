@@ -19,12 +19,12 @@ db_config = {
     'database': os.getenv('DB_DATABASE')
 }
 
-def create_table(): #images라는 테이블을 생성
+def create_table(table_name): #db_name라는 테이블을 생성, pharyngitis, otoscope in my database
     connection = mysql.connector.connect(**db_config)
     cursor = connection.cursor()
 
-    query = """
-    CREATE TABLE IF NOT EXISTS images (
+    query = f"""
+    CREATE TABLE IF NOT EXISTS {table_name} (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_name VARCHAR(255),
         image_data MEDIUMBLOB,
@@ -39,12 +39,13 @@ def create_table(): #images라는 테이블을 생성
     cursor.close()
     connection.close()
 
-def save_image_to_db(user_name, image_data, probability):
+
+def save_image_to_db(user_name, image_data, probability, table_name):
     connection = mysql.connector.connect(**db_config)
     cursor = connection.cursor()
 
-    query = """
-    INSERT INTO images (user_name, image_data, probability) VALUES (%s, %s, %s);
+    query = f"""
+    INSERT INTO {table_name} (user_name, image_data, probability) VALUES (%s, %s, %s);
     """
     cursor.execute(query, (user_name, image_data, probability))
 
@@ -54,10 +55,14 @@ def save_image_to_db(user_name, image_data, probability):
     print(f"Image from user {user_name} with probability {probability} has been saved to the database.")
 
 
-app = Flask(__name__)
+pharyngitis_model_path = "D:\\User\\my_coding_projects\\pharyngitis_model.h5" #pharyngitis
+pharyngitis_model = tf.keras.models.load_model(pharyngitis_model_path)
 
-model_path = "D:\\User\\my_coding_projects\\my_model.h5"
-model = tf.keras.models.load_model(model_path)
+otoscope_model_path = "D:\\User\\my_coding_projects\\otoscope_model.h5" #otosope
+otoscope_model = tf.keras.models.load_model(otoscope_model_path)
+
+
+app = Flask(__name__)
 
 #temp_image에 저장하는 방식
 '''
@@ -106,8 +111,8 @@ def upload_image():
 '''
 
 #memory에 직접 저장하는 방식
-@app.route('/upload', methods=['POST'])
-def upload_image():
+@app.route('/upload_pharyngitis', methods=['POST'])
+def upload_image_pharyngitis():
     uploaded_file = request.files['file']
     user_name = request.form['user_name']
 
@@ -125,7 +130,7 @@ def upload_image():
         image_array = np.expand_dims(image_array, axis=0)
 
         # 예측 수행
-        prediction = model.predict(image_array)
+        prediction = pharyngitis_model.predict(image_array)
         probability = prediction[0][0]
 
         # 확률 값을 일반 float로 변환
@@ -136,7 +141,49 @@ def upload_image():
         byte_stream.seek(0)
         image_data = byte_stream.read()
 
-        save_image_to_db(user_name, image_data, probability) # DB에 이미지와 사용자 정보 저장
+        save_image_to_db(user_name, image_data, probability, 'pharyngitis') # DB에 이미지와 사용자 정보 저장
+
+        # 응답에 이미지와 확률 값을 같이 반환
+        response_data = {
+            'probability': probability,
+            'image': base64.b64encode(image_data).decode()
+        }
+
+        return jsonify(response_data)
+    else:
+        return {'error': 'No file uploaded'}
+
+@app.route('/upload_otoscope', methods=['POST'])
+def upload_image_otoscope():
+    uploaded_file = request.files['file']
+    user_name = request.form['user_name']
+
+    if uploaded_file.filename != '':
+        # 이미지 파일을 바이트 스트림으로 읽기
+        byte_stream = io.BytesIO(uploaded_file.read())
+
+        # 이미지를 PIL 객체로 로드
+        image = Image.open(byte_stream)
+
+        # 이미지를 모델에 입력할 수 있는 형태로 전처리
+        image = image.resize((500, 500)) #inputshape에 맞게 수정
+        image_array = img_to_array(image)
+        image_array = tf.keras.applications.resnet.preprocess_input(image_array)
+        image_array = np.expand_dims(image_array, axis=0)
+
+        # 예측 수행
+        prediction = otoscope_model.predict(image_array)
+        probability = prediction[0][0] #여기 수정
+
+        # 확률 값을 일반 float로 변환
+        if isinstance(probability, np.float32):
+            probability = float(probability)
+
+        # 이미지를 바이트 스트림으로 다시 변환 (필요한 경우)
+        byte_stream.seek(0)
+        image_data = byte_stream.read()
+
+        save_image_to_db(user_name, image_data, probability, 'otoscope') # DB에 이미지와 사용자 정보 저장
 
         # 응답에 이미지와 확률 값을 같이 반환
         response_data = {
@@ -149,9 +196,9 @@ def upload_image():
         return {'error': 'No file uploaded'}
 
 
-
 if __name__ == '__main__':
-    create_table() # 테이블 생성
+    create_table('pharyngitis')# 테이블 생성
+    create_table('otoscope')
     app.run()
 
 
