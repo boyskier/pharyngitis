@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Patients</title>
+</head>
+<body>
+    <h1>Check Patients</h1>
+    <form action="/check_patients" method="post">
+        <label for="user_name">Patient ID:</label>
+        <input type="text" id="user_name" name="user_name" required><br><br>
+        <label for="table_name">Table Name:</label>
+        <select id="table_name" name="table_name" required>
+            <option value="pharyngitis">Pharyngitis</option>
+            <option value="otoscope">Otoscope</option>
+        </select><br><br>
+        <input type="submit" value="Check">
+    </form>
+    <p><a href="{{ url_for('main_page') }}">Main Page</a></p>
+</body>
+</html>

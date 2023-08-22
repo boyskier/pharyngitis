@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 from keras.preprocessing.image import img_to_array
 from PIL import Image
 import numpy as np
@@ -9,6 +9,7 @@ import base64
 from dotenv import load_dotenv
 import os
 import bcrypt
+from check_data_inDB import show_all_images_by_user_name_web
 
 load_dotenv()
 
@@ -106,6 +107,8 @@ pharyngitis_model = tf.keras.models.load_model("D:\\User\\my_coding_projects\\ph
 otoscope_model = tf.keras.models.load_model("D:\\User\\my_coding_projects\\otoscope_model.h5")
 
 app = Flask(__name__)
+secret_key = os.getenv('SECRET_KEY')
+app.config['SECRET_KEY'] = secret_key
 
 
 def process_image(uploaded_file, model, image_size):
@@ -120,6 +123,11 @@ def process_image(uploaded_file, model, image_size):
     byte_stream.seek(0)
     image_data = byte_stream.read()
     return probability, image_data
+
+
+@app.route('/') # endopint는 함수명인 main_page가 됨.
+def main_page():
+    return render_template('index.html')
 
 
 @app.route('/signup', methods=['POST'])  # 회원가입 페이지
@@ -222,9 +230,11 @@ def doctor_signin():
 
     # ID와 비밀번호 검증 (해싱된 비밀번호와 비교)
     if result and bcrypt.checkpw(password, result[0].encode('utf-8')):
-        return jsonify({'status': 'success', 'message': 'Doctor signed in successfully'})
+        session['doctor_user_name'] = user_name  # 세션에 의사 정보 저장
+        return redirect(url_for('check_patients_page'))
     else:
         return jsonify({'status': 'error', 'message': 'Authentication failed'})
+
 
 
 @app.route('/upload/<table_name>', methods=['POST'])
@@ -250,10 +260,30 @@ def upload_image(table_name):
     else:
         return {'error': 'No file uploaded'}
 
+@app.route('/check_patients_page', methods=['GET'])
+def check_patients_page():
+    if 'doctor_user_name' not in session:  # 의사 정보가 세션에 없으면
+        return redirect(url_for('doctor_signin_page'))  # 로그인 페이지로 리다이렉트
+
+    return render_template('check_patients.html')
+
+
+@app.route('/check_patients', methods=['POST'])
+def check_patients():
+    user_name = request.form.get('user_name')
+    table_name = request.form.get('table_name')
+
+    images = show_all_images_by_user_name_web(user_name, table_name)
+    if not images:
+        return "No records found for user " + user_name
+
+    return render_template('patient_images.html', user_name=user_name, images=images)
+
+
 
 if __name__ == '__main__':
     create_table('pharyngitis')
     create_table('otoscope')
     create_userinfo_table()
     create_doctors_table()
-    app.run()
+    app.run(debug=True)

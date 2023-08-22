@@ -4,6 +4,8 @@ import io
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 import os
+import base64
+
 
 load_dotenv()
 
@@ -96,6 +98,27 @@ def show_all_images_by_user_name(user_name, table_name):
     plt.show()
 
 
-user_name = 'patient2'  # 원하는 환자 이름으로 수정
-show_all_images_by_user_name(user_name, 'pharyngitis')
-show_all_images_by_user_name(user_name, 'otoscope')
+# user_name = 'patient2'  # 원하는 환자 이름으로 수정
+# show_all_images_by_user_name(user_name, 'pharyngitis')
+# show_all_images_by_user_name(user_name, 'otoscope')
+
+
+
+
+def show_all_images_by_user_name_web(user_name, table_name):
+    connection = connect_db()
+    cursor = connection.cursor()
+    query = f"SELECT image_data, upload_time, probability FROM {table_name} WHERE user_name = '{user_name}';"
+    cursor.execute(query)
+    results = cursor.fetchall()
+    close_db(connection, cursor)
+
+    if not results:
+        return None
+
+    images = []
+    for image_data, upload_time, probability in results:
+        image_base64 = base64.b64encode(image_data).decode('utf-8')
+        images.append((image_base64, upload_time, probability))
+
+    return images
