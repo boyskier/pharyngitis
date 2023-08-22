@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from keras.preprocessing.image import img_to_array
 from PIL import Image
 import numpy as np
@@ -47,6 +47,26 @@ def create_userinfo_table():
     cursor.close()
     connection.close()
 
+def create_doctors_table(): #doctors라는 table에 의사 정보 저장
+
+    #license: 의사 면허번호
+
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+
+    query = f"""
+    CREATE TABLE IF NOT EXISTS doctors (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_name VARCHAR(255) UNIQUE,
+        password VARCHAR(255),
+        licence VARCHAR(8)
+    );
+    """
+
+    cursor.execute(query)
+    connection.commit()
+    cursor.close()
+    connection.close()
 
 def create_table(table_name):  # table_name: pharyngitis, otoscope
     connection = mysql.connector.connect(**db_config)
@@ -151,6 +171,61 @@ def signin():
     else:
         return jsonify({'status': 0})  # 인증 실패
 
+@app.route('/doctor_signup_page', methods=['GET'])
+def doctor_signup_page():
+    return render_template('doctor_signup.html')
+
+@app.route('/doctor_signup', methods=['POST'])  # 의사 회원가입 페이지
+def doctor_signup():
+    # 클라이언트로부터 정보 받기
+    user_name = request.form.get('user_name')
+    password = request.form['password'].encode('utf-8')  # 인코딩
+    hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())  # 해싱
+    licence = request.form['licence']
+
+    # 의사 ID 중복 확인
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    cursor.execute(f"SELECT user_name FROM doctors WHERE user_name = %s", (user_name,))
+    result = cursor.fetchone()
+
+    if result:
+        connection.close()
+        return jsonify({'status': 'error', 'message': 'User ID already exists'})
+
+    # 의사 정보 저장
+    query = f"""
+        INSERT INTO doctors (user_name, password, licence) VALUES (%s, %s, %s);
+        """
+    cursor.execute(query, (user_name, hashed_password, licence))
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return jsonify({'status': 'success', 'message': 'Doctor registered successfully'})
+
+@app.route('/doctor_signin_page', methods=['GET'])
+def doctor_signin_page():
+    return render_template('doctor_signin.html')
+
+@app.route('/doctor_signin', methods=['POST'])
+def doctor_signin():
+    user_name = request.form.get('user_name')
+    password = request.form['password'].encode('utf-8')  # 인코딩
+
+    # 데이터베이스에서 의사 정보 조회
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    cursor.execute(f"SELECT password FROM doctors WHERE user_name = %s", (user_name,))
+    result = cursor.fetchone()
+    connection.close()
+
+    # ID와 비밀번호 검증 (해싱된 비밀번호와 비교)
+    if result and bcrypt.checkpw(password, result[0].encode('utf-8')):
+        return jsonify({'status': 'success', 'message': 'Doctor signed in successfully'})
+    else:
+        return jsonify({'status': 'error', 'message': 'Authentication failed'})
+
 
 @app.route('/upload/<table_name>', methods=['POST'])
 def upload_image(table_name):
@@ -180,4 +255,5 @@ if __name__ == '__main__':
     create_table('pharyngitis')
     create_table('otoscope')
     create_userinfo_table()
+    create_doctors_table()
     app.run()
