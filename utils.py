@@ -7,6 +7,12 @@ import mysql.connector
 from dotenv import load_dotenv
 import os
 import base64
+import torch
+import torchvision.transforms as transforms
+from PIL import Image
+import io
+
+
 
 load_dotenv()
 
@@ -107,18 +113,21 @@ def save_image_to_db(user_name, image_data, probability, table_name):
     connection.close()
     print(f"Image from user {user_name} with probability {probability} has been saved to the database.")
 
-def process_image(uploaded_file, model, image_size):
-    byte_stream = io.BytesIO(uploaded_file.read())
-    image = Image.open(byte_stream)
-    image = image.resize(image_size)
-    image_array = img_to_array(image)
-    image_array = tf.keras.applications.resnet.preprocess_input(image_array)
-    image_array = np.expand_dims(image_array, axis=0)
-    prediction = model.predict(image_array)
-    probability = float(prediction[0][0])
-    byte_stream.seek(0)
-    image_data = byte_stream.read()
-    return probability, image_data
+# def process_image(uploaded_file, model, image_size):
+#     byte_stream = io.BytesIO(uploaded_file.read())
+#     image = Image.open(byte_stream)
+#     image = image.resize(image_size)
+#     image_array = img_to_array(image)
+#     image_array = tf.keras.applications.resnet.preprocess_input(image_array)
+#     image_array = np.expand_dims(image_array, axis=0)
+#     prediction = model.predict(image_array)
+#     probability = float(prediction[0][0])
+#     byte_stream.seek(0)
+#     image_data = byte_stream.read()
+#     return probability, image_data
+
+
+
 
 def show_all_images_by_user_name_web(user_name, table_name):
     connection = connect_db()

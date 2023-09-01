@@ -2,6 +2,13 @@ from flask import Flask, request, jsonify, render_template, redirect, url_for, s
 import mysql.connector
 import bcrypt
 from utils import *
+from waitress import serve
+from PIL import Image
+
+import torch
+from Untitled import CustomModel, HuggingfaceCustomModel, IdentityLayer #Untitled로 부터 받아옴
+
+
 
 db_config = {
     'user': os.getenv('DB_USER'),
@@ -10,14 +17,48 @@ db_config = {
     'database': os.getenv('DB_DATABASE')
 }
 
-pharyngitis_model = tf.keras.models.load_model("D:\\User\\my_coding_projects\\pharyngitis_model.h5")
-otoscope_model = tf.keras.models.load_model("D:\\User\\my_coding_projects\\otoscope_model.h5")
+# pharyngitis_model = tf.keras.models.load_model("pharyngitis_model.h5")
+# otoscope_model = tf.keras.models.load_model("otoscope_model.h5")
+
+pharyngitis_model = torch.load("dinov2_vitb14_model.pth")
+otoscope_model = torch.load("alexnet_model.pth")
+
+def process_image(uploaded_file, model, image_size):
+    model.to("cpu")
+    model.eval()
+    byte_stream = io.BytesIO(uploaded_file.read())
+    image = Image.open(byte_stream)
+    image = image.resize(image_size)
+
+    # Define the preprocessing steps for ResNet need to change
+    # preprocess = transforms.Compose([
+    #     transforms.ToTensor(),
+    # ])
+    #
+    # input_tensor = preprocess(image)
+    image = model.transformer(image)
+    image = image.unsqueeze(dim = 0)  # Add a batch dimension
+
+    # Perform inference
+    # with torch.no_grad():
+    #     output = model(image)
+    #     # Convert the output to a probability (assuming you're using sigmoid in the last layer)
+    #     probability = float(torch.sigmoid(output).item())
+    probability = float(model.prob_func(image))
+    # Go back to the start of the byte stream to read the image data
+    byte_stream.seek(0)
+    image_data = byte_stream.read()
+
+    return probability, image_data
+
+
 
 app = Flask(__name__)
 secret_key = os.getenv('SECRET_KEY')
 app.config['SECRET_KEY'] = secret_key
 
-@app.route('/') # endopint는 함수명인 main_page가 됨.
+
+@app.route('/')  # endopint는 함수명인 main_page가 됨.
 def main_page():
     return render_template('index.html')
 
@@ -71,9 +112,11 @@ def signin():
     else:
         return jsonify({'status': 0})  # 인증 실패
 
+
 @app.route('/doctor_signup_page', methods=['GET'])
 def doctor_signup_page():
     return render_template('doctor_signup.html')
+
 
 @app.route('/doctor_signup', methods=['POST'])  # 의사 회원가입 페이지
 def doctor_signup():
@@ -104,9 +147,11 @@ def doctor_signup():
 
     return jsonify({'status': 'success', 'message': 'Doctor registered successfully'})
 
+
 @app.route('/doctor_signin_page', methods=['GET'])
 def doctor_signin_page():
     return render_template('doctor_signin.html')
+
 
 @app.route('/doctor_signin', methods=['POST'])
 def doctor_signin():
@@ -128,7 +173,6 @@ def doctor_signin():
         return jsonify({'status': 'error', 'message': 'Authentication failed'})
 
 
-
 @app.route('/upload/<table_name>', methods=['POST'])
 def upload_image(table_name):
     uploaded_file = request.files['file']
@@ -138,12 +182,12 @@ def upload_image(table_name):
         image_size = (224, 224)
         model = pharyngitis_model
     else:
-        image_size = (500, 500)
+        image_size = (224, 224)
         model = otoscope_model
 
     if uploaded_file.filename != '':
-        probability, image_data = process_image(uploaded_file, model, image_size)
-        save_image_to_db(user_name, image_data, probability, table_name)
+        probability, image_data = process_image(uploaded_file, model, image_size)  # Assuming process_image is adapted for PyTorch
+        save_image_to_db(user_name, image_data, probability, table_name)  # Assuming this function doesn't need to be modified
         response_data = {
             'probability': probability,
             'image': base64.b64encode(image_data).decode()
@@ -152,12 +196,14 @@ def upload_image(table_name):
     else:
         return {'error': 'No file uploaded'}
 
+
+
 @app.route('/check_patients_page', methods=['GET'])
 def check_patients_page():
     if 'doctor_user_name' not in session:  # 의사 정보가 세션에 없으면
         return redirect(url_for('doctor_signin_page'))  # 로그인 페이지로 리다이렉트
 
-    return render_template('check_patients.html')
+    return render_template('select_patients.html')
 
 
 @app.route('/check_patients', methods=['POST'])
@@ -172,10 +218,11 @@ def check_patients():
     return render_template('patient_images.html', user_name=user_name, images=images)
 
 
-
 if __name__ == '__main__':
     create_table('pharyngitis')
     create_table('otoscope')
     create_userinfo_table()
     create_doctors_table()
-    app.run(debug=True)
+    serve(app, host='0.0.0.0', port=5000)
+    # app.run(debug=True)
+

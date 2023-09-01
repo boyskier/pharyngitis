@@ -24,4 +24,4 @@ def to_server(user_name='patient1', img_path='sample_images/2.JPG', mode='pharyn
         print(f"Error: {response.text}")
 
 
-to_server(user_name='patient2', img_path='sample_images/4.JPG', mode='pharyngitis')
+to_server(user_name='patient2', img_path='sample_images/150.jpg', mode='pharyngitis')
