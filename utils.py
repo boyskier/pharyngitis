@@ -98,6 +98,19 @@ def create_table(table_name):  # table_name: pharyngitis, otoscope
     connection.commit()
     cursor.close()
     connection.close()
+def create_patient_doctor_table():
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    query = '''
+        CREATE TABLE IF NOT EXISTS patient_doctor (
+            patient_id VARCHAR(50),
+            doctor_id VARCHAR(50)
+        );
+    '''
+    cursor.execute(query)
+    connection.commit()
+    cursor.close()
+    connection.close()
 
 
 def save_image_to_db(user_name, image_data, probability, table_name):
@@ -125,8 +138,6 @@ def save_image_to_db(user_name, image_data, probability, table_name):
 #     byte_stream.seek(0)
 #     image_data = byte_stream.read()
 #     return probability, image_data
-
-
 
 
 def show_all_images_by_user_name_web(user_name, table_name):

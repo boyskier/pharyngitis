@@ -5,9 +5,9 @@ from utils import *
 from waitress import serve
 from PIL import Image
 
-import torch
-from Untitled import CustomModel, HuggingfaceCustomModel, IdentityLayer #Untitled로 부터 받아옴
-
+# import torch
+# from Untitled import CustomModel, HuggingfaceCustomModel, IdentityLayer #Untitled로 부터 받아옴
+#
 
 
 db_config = {
@@ -17,6 +17,7 @@ db_config = {
     'database': os.getenv('DB_DATABASE')
 }
 
+# tf model
 # pharyngitis_model = tf.keras.models.load_model("pharyngitis_model.h5")
 # otoscope_model = tf.keras.models.load_model("otoscope_model.h5")
 
@@ -51,7 +52,11 @@ def process_image(uploaded_file, model, image_size):
 
     return probability, image_data
 
-
+# def process_image(uploaded_file, model, image_size): # 다른 부분 개발용도로 애러 없게 만들어 놓음
+#     byte_stream = io.BytesIO(uploaded_file.read())
+#     image_data = Image.open(byte_stream)
+#
+#     return 0.67, image_data
 
 app = Flask(__name__)
 secret_key = os.getenv('SECRET_KEY')
@@ -208,14 +213,56 @@ def check_patients_page():
 
 @app.route('/check_patients', methods=['POST'])
 def check_patients():
-    user_name = request.form.get('user_name')
+    user_name = request.form.get('user_name')  # Patient's user_name
     table_name = request.form.get('table_name')
+    doctor_id = session.get('doctor_user_name')  # Assuming you have stored doctor_id in the session
+
+    # Check if doctor has permission
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    query = "SELECT * FROM patient_doctor WHERE patient_id = %s AND doctor_id = %s;"
+    cursor.execute(query, (user_name, doctor_id))
+    permission_result = cursor.fetchone()
+
+    if not permission_result:
+        return "You don't have permission to access this patient's records."
 
     images = show_all_images_by_user_name_web(user_name, table_name)
+
     if not images:
         return "No records found for user " + user_name
 
+    cursor.close()
+    connection.close()
     return render_template('patient_images.html', user_name=user_name, images=images)
+
+
+@app.route('/give_doctor_permission', methods=['POST'])
+def give_doctor_permission():
+    patient_id = request.json.get('patient_id') #1,2,3이런거 말고 patient1이런거
+    doctor_id = request.json.get('doctor_id') #정확히는 username 입니다.
+
+    # Check if doctor_id exists in doctors table
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    query = "SELECT user_name FROM doctors WHERE user_name = %s;"
+    cursor.execute(query, (doctor_id,))
+    result = cursor.fetchone()
+
+    if result:
+        # Store in database
+        query = '''
+            INSERT INTO patient_doctor (patient_id, doctor_id) VALUES (%s, %s);
+        '''
+        cursor.execute(query, (patient_id, doctor_id))
+        connection.commit()
+        cursor.close()
+        connection.close()
+        return jsonify({'status': 'success', 'message': 'Doctor permission granted'})
+    else:
+        cursor.close()
+        connection.close()
+        return jsonify({'status': 'error', 'message': 'Doctor ID does not exist'})
 
 
 if __name__ == '__main__':
@@ -223,6 +270,7 @@ if __name__ == '__main__':
     create_table('otoscope')
     create_userinfo_table()
     create_doctors_table()
+    create_patient_doctor_table()
     serve(app, host='0.0.0.0', port=5000)
     # app.run(debug=True)
 
