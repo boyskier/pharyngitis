@@ -5,10 +5,8 @@ from utils import *
 from waitress import serve
 from PIL import Image
 
-# import torch
-# from Untitled import CustomModel, HuggingfaceCustomModel, IdentityLayer #Untitled로 부터 받아옴
-#
-
+import torch
+from Fever_pytorch_structure_2 import CustomModel, HuggingfaceCustomModel, IdentityLayer
 
 db_config = {
     'user': os.getenv('DB_USER'),
@@ -21,42 +19,27 @@ db_config = {
 # pharyngitis_model = tf.keras.models.load_model("pharyngitis_model.h5")
 # otoscope_model = tf.keras.models.load_model("otoscope_model.h5")
 
-pharyngitis_model = torch.load("dinov2_vitb14_model.pth")
-otoscope_model = torch.load("alexnet_model.pth")
+pharyngitis_model = torch.load("google_vit-base-patch16-224_model.pth", map_location=torch.device('cpu'))
+# otoscope_model = torch.load("alexnet_model.pth")
 
 def process_image(uploaded_file, model, image_size):
     model.to("cpu")
     model.eval()
     byte_stream = io.BytesIO(uploaded_file.read())
     image = Image.open(byte_stream)
-    image = image.resize(image_size)
-
-    # Define the preprocessing steps for ResNet need to change
-    # preprocess = transforms.Compose([
-    #     transforms.ToTensor(),
-    # ])
-    #
-    # input_tensor = preprocess(image)
     image = model.transformer(image)
     image = image.unsqueeze(dim = 0)  # Add a batch dimension
+    output = model(image)
 
-    # Perform inference
-    # with torch.no_grad():
-    #     output = model(image)
-    #     # Convert the output to a probability (assuming you're using sigmoid in the last layer)
-    #     probability = float(torch.sigmoid(output).item())
-    probability = float(model.prob_func(image))
+    probability = float(model.prob_func(output))
+    print(probability)
+    print(type(probability))
     # Go back to the start of the byte stream to read the image data
     byte_stream.seek(0)
     image_data = byte_stream.read()
 
     return probability, image_data
 
-# def process_image(uploaded_file, model, image_size): # 다른 부분 개발용도로 애러 없게 만들어 놓음
-#     byte_stream = io.BytesIO(uploaded_file.read())
-#     image_data = Image.open(byte_stream)
-#
-#     return 0.67, image_data
 
 app = Flask(__name__)
 secret_key = os.getenv('SECRET_KEY')
@@ -188,7 +171,7 @@ def upload_image(table_name):
         model = pharyngitis_model
     else:
         image_size = (224, 224)
-        model = otoscope_model
+        # model = otoscope_model
 
     if uploaded_file.filename != '':
         probability, image_data = process_image(uploaded_file, model, image_size)  # Assuming process_image is adapted for PyTorch

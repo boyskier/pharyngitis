@@ -4,7 +4,7 @@ import json
 url = "http://localhost:5000/give_doctor_permission"  # Replace with your actual server URL
 
 data = {
-    "patient_id": "patient2",
+    "patient_id": "your_username",
     "doctor_id": "이경언"
 }
 
