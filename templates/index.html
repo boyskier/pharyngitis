@@ -3,13 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Main Page</title>
+    <title>Welcome to Our Medical System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header {
+            background-color: #007BFF;
+            color: #fff;
+            text-align: center;
+            padding: 1rem 0;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            flex: 1;
+        }
+        .options-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .option-link {
+            display: inline-block;
+            width: 200px; /* Adjusted width for uniformity */
+            margin: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 18px;
+            text-align: center;
+            text-decoration: none;
+            color: #007BFF;
+            border: 1px solid #007BFF;
+            border-radius: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .option-link:hover {
+            background-color: #007BFF;
+            color: #fff;
+        }
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1rem 0;
+        }
+        .combined-section {
+            background-color: #f7f7f7;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 1rem; /* Adjusted margin at the bottom of the combined section */
+        }
+
+        .combined-section h2 {
+            font-size: 24px;
+            margin-bottom: 1rem;
+        }
+
+        .combined-section p {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.6;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to Our Medical System!</h1>
-    <p>Please select an option:</p>
-    <a href="{{ url_for('doctor_signup_page') }}">Sign Up</a> |
-    <a href="{{ url_for('doctor_signin_page') }}">Sign In</a> |
-    <a href="{{ url_for('check_patients_page') }}">Check Patient Images</a>
+    <header>
+        <h1>Welcome to Our Medical System!</h1>
+    </header>
+    <div class="container">
+        <p>Please select an option:</p>
+        <div class="options-container">
+            <a class="option-link" href="{{ url_for('doctor_signup_page') }}">Sign Up</a>
+            <a class="option-link" href="{{ url_for('doctor_signin_page') }}">Sign In</a>
+            <a class="option-link" href="{{ url_for('check_patients_page') }}">Check Patient Images</a>
+        </div>
+    </div>
+    <section class="combined-section">
+        <h2>About Us</h2>
+        <p>Welcome to Our Medical System! We are dedicated to bridging the gap between medicine and AI...</p>
+
+        <h2>Collaboration Opportunities</h2>
+        <p>We welcome collaborations with medical professionals, AI researchers, and healthcare institutions...</p>
+        <p>Contact us at collaborate@example.com to explore partnership possibilities.</p>
+    </section>
+    <footer>
+        <p>Contact us at contact@example.com for inquiries about the medical system.</p>
+    </footer>
 </body>
 </html>
