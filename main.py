@@ -32,8 +32,8 @@ def process_image(uploaded_file, model, image_size):
     output = model(image)
 
     probability = float(model.prob_func(output))
-    print(probability)
-    print(type(probability))
+    # print(probability)
+    # print(type(probability))
     # Go back to the start of the byte stream to read the image data
     byte_stream.seek(0)
     image_data = byte_stream.read()
@@ -196,29 +196,54 @@ def check_patients_page():
 
 @app.route('/check_patients', methods=['POST'])
 def check_patients():
-    user_name = request.form.get('user_name')  # Patient's user_name
+    user_name = request.form.get('patient_id')
     table_name = request.form.get('table_name')
-    doctor_id = session.get('doctor_user_name')  # Assuming you have stored doctor_id in the session
+    # page = int(request.form.get('page', 1))  # 페이지 번호, 기본은 1
+    page = 1
+    items_per_page = 5  # 페이지 당 아이템 개수, 이 값을 변경할 수 있습니다.
+    doctor_id = session.get('doctor_user_name')
 
-    # Check if doctor has permission
-    connection = mysql.connector.connect(**db_config)
-    cursor = connection.cursor()
-    query = "SELECT * FROM patient_doctor WHERE patient_id = %s AND doctor_id = %s;"
-    cursor.execute(query, (user_name, doctor_id))
-    permission_result = cursor.fetchone()
+    try:
+        # Check if doctor has permission
+        with mysql.connector.connect(**db_config) as connection:
+            cursor = connection.cursor()
+            query = "SELECT * FROM patient_doctor WHERE patient_id = %s AND doctor_id = %s;"
+            cursor.execute(query, (user_name, doctor_id))
+            permission_result = cursor.fetchone()
+            print(user_name, doctor_id)
+            print(permission_result)
 
-    if not permission_result:
-        return "You don't have permission to access this patient's records."
+            if not permission_result:
+                return "You don't have permission to access this patient's records."
 
-    images = show_all_images_by_user_name_web(user_name, table_name)
+        images = show_all_images_by_user_name_web(user_name, table_name, page, items_per_page)
+
+        if not images:
+            return "No records found for user " + user_name
+
+        return render_template('patient_images.html', user_name=user_name, images=images, current_page=page, table_name=table_name, items_per_page=items_per_page)
+
+    except mysql.connector.Error as err:
+        print("An error occurred:", err)
+        return "An error occurred while processing your request."
+
+
+
+@app.route('/check_patients_paged', methods=['GET'])
+def check_patients_paged():
+    user_name = request.args.get('user_name')
+    table_name = request.args.get('table_name')
+    # print('table_name', table_name)
+    page = int(request.args.get('page', 1))
+    # print('check_patients_paged:', user_name, table_name, page)
+    items_per_page = 5  # 예시: 페이지 당 5개의 이미지
+
+    images = show_all_images_by_user_name_web_paged(user_name, table_name, page, items_per_page)
 
     if not images:
         return "No records found for user " + user_name
 
-    cursor.close()
-    connection.close()
-    return render_template('patient_images.html', user_name=user_name, images=images)
-
+    return render_template('patient_images.html', user_name=user_name, images=images, current_page=page, table_name=table_name, items_per_page=items_per_page)
 
 @app.route('/give_doctor_permission', methods=['POST'])
 def give_doctor_permission():
@@ -254,6 +279,6 @@ if __name__ == '__main__':
     create_userinfo_table()
     create_doctors_table()
     create_patient_doctor_table()
-    serve(app, host='0.0.0.0', port=5000)
-    # app.run(debug=True)
+    # serve(app, host='0.0.0.0', port=5000)
+    app.run(debug=True)
 
