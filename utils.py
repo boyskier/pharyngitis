@@ -12,8 +12,6 @@ import torchvision.transforms as transforms
 from PIL import Image
 import io
 
-
-
 load_dotenv()
 
 db_config = {
@@ -22,6 +20,7 @@ db_config = {
     'host': os.getenv('DB_HOST'),
     'database': os.getenv('DB_DATABASE')
 }
+
 
 def connect_db():
     return mysql.connector.connect(**db_config)
@@ -59,9 +58,10 @@ def create_userinfo_table():
     cursor.close()
     connection.close()
 
-def create_doctors_table(): #doctors라는 table에 의사 정보 저장
 
-    #license: 의사 면허번호
+def create_doctors_table():  # doctors라는 table에 의사 정보 저장
+
+    # license: 의사 면허번호
 
     connection = mysql.connector.connect(**db_config)
     cursor = connection.cursor()
@@ -79,6 +79,7 @@ def create_doctors_table(): #doctors라는 table에 의사 정보 저장
     connection.commit()
     cursor.close()
     connection.close()
+
 
 def create_table(table_name):  # table_name: pharyngitis, otoscope
     connection = mysql.connector.connect(**db_config)
@@ -98,6 +99,8 @@ def create_table(table_name):  # table_name: pharyngitis, otoscope
     connection.commit()
     cursor.close()
     connection.close()
+
+
 def create_patient_doctor_table():
     connection = mysql.connector.connect(**db_config)
     cursor = connection.cursor()
@@ -145,7 +148,7 @@ def save_image_to_db(user_name, image_data, probability, table_name):
 #
 #     return images
 
-def show_all_images_by_user_name_web(user_name, table_name, page=1, items_per_page=5):
+def show_all_images_by_user_name_web(user_name, table_name, page, items_per_page):
     start_index = (page - 1) * items_per_page
     connection = connect_db()
     cursor = connection.cursor()
@@ -167,11 +170,12 @@ def show_all_images_by_user_name_web(user_name, table_name, page=1, items_per_pa
 
     return images
 
+
 def show_all_images_by_user_name_web_paged(user_name, table_name, page, items_per_page):
     offset = (page - 1) * items_per_page  # 이름을 'offset'으로 변경하였습니다.
     connection = connect_db()
     cursor = connection.cursor()
-    print(f"offset: {offset}")
+    # print(f"offset: {offset}")
     query = f"""SELECT image_data, upload_time, probability 
                     FROM {table_name} 
                     WHERE user_name = '{user_name}' 
@@ -190,4 +194,3 @@ def show_all_images_by_user_name_web_paged(user_name, table_name, page, items_pe
         images.append((image_base64, upload_time, probability))
 
     return images
-
