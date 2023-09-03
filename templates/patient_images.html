@@ -110,6 +110,16 @@
             border-radius: 5px;
             background-color: #fff;
         }
+        .image-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        .image-preview {
+            flex-basis: calc(50% - 10px);
+            box-sizing: border-box;
+            margin: 5px;
+        }
 
 
     </style>
@@ -118,46 +128,54 @@
     <title>Patient Images</title>
 </head>
 <body>
-    <div class="image-list">
-        <h1>{{ table_name }} <span class="highlight">Images for </span>{{ user_name }}</h1>
-        <p><a href="{{ url_for('main_page') }}">Main Page</a> | <a href="{{ url_for('check_patients_page') }}">Previous Page</a></p>
+<div class="image-list">
+    <h1>{{ table_name }} <span class="highlight">Images for </span>{{ user_name }}</h1>
+    <p><a href="{{ url_for('main_page') }}">Main Page</a> | <a href="{{ url_for('check_patients_page') }}">Previous
+        Page</a></p>
+    <p class="image-info">The probability value is rounded to the fourth decimal place</p>
 
-        <!-- 이미지 출력 -->
+    <!-- 이미지 출력 -->
+    <div class="image-grid"> <!-- Added a container for the image grid -->
         {% for image_data, upload_time, probability in images %}
-            <div class="image-preview">
-                <img src="data:image/jpeg;base64,{{ image_data }}" alt="{{ upload_time }} Probability: {{ probability }}" />
-                <p class="image-info">Time: {{ upload_time }} | Probability: {{ '{:.3f}'.format(probability) }}</p>
-            </div>
-        {% endfor %}
-
-        <!-- 페이지네이션 -->
-        <div class="pagination">
-            {% if current_page > 1 %}
-                <a class="pagination-link" href="{{ url_for('check_patients_paged', user_name=user_name, table_name=table_name, page=current_page-1) }}">Previous</a>
-            {% endif %}
-            <span class="current-page">Page {{ current_page }}</span>
-            <a class="pagination-link" href="{{ url_for('check_patients_paged', user_name=user_name, table_name=table_name, page=current_page+1) }}">Next</a>
+        <div class="image-preview">
+            <img src="data:image/jpeg;base64,{{ image_data }}" alt="{{ upload_time }} Probability: {{ probability }}"/>
+            <p class="image-info">Time: {{ upload_time }} | Probability: {{ '{:.3f}'.format(probability) }}</p>
         </div>
-
+        {% if loop.index % 2 == 0 %} <!-- Add a line break after every 2 images -->
+        <div class="break"></div>
+        {% endif %}
+        {% endfor %}
     </div>
 
-    <script>
-        // 이미지를 새 탭으로 열기
-        function openImageInNewTab(imageSrc) {
-            var newTab = window.open();
-            newTab.document.write("<img src='" + imageSrc + "' alt='Image' style='max-width: 100%; max-height: 100%;'>");
-            newTab.document.close();
-        }
+    <!-- 페이지네이션 -->
+    <div class="pagination">
+        {% if current_page > 1 %}
+        <a class="pagination-link"
+           href="{{ url_for('check_patients_paged', user_name=user_name, table_name=table_name, page=current_page-1) }}">Previous</a>
+        {% endif %}
+        <span class="current-page">Page {{ current_page }}</span>
+        <a class="pagination-link"
+           href="{{ url_for('check_patients_paged', user_name=user_name, table_name=table_name, page=current_page+1) }}">Next</a>
+    </div>
+</div>
 
-        var images = document.querySelectorAll(".image-preview img");
+<script>
+    // 이미지를 새 탭으로 열기
+    function openImageInNewTab(imageSrc) {
+        var newTab = window.open();
+        newTab.document.write("<img src='" + imageSrc + "' alt='Image' style='max-width: 100%; max-height: 100%;'>");
+        newTab.document.close();
+    }
 
-        images.forEach(function(image) {
-            image.onclick = function() {
-                openImageInNewTab(this.src);
-            };
-        });
-    </script>
+    var images = document.querySelectorAll(".image-preview img");
 
-
+    images.forEach(function(image) {
+        image.onclick = function() {
+            openImageInNewTab(this.src);
+        };
+    });
+</script>
 </body>
+</html>
+
 </html>
