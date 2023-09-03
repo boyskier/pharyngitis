@@ -20,6 +20,8 @@ db_config = {
 # otoscope_model = tf.keras.models.load_model("otoscope_model.h5")
 
 pharyngitis_model = torch.load("google_vit-base-patch16-224_model.pth", map_location=torch.device('cpu'))
+
+
 # otoscope_model = torch.load("alexnet_model.pth")
 
 def process_image(uploaded_file, model, image_size):
@@ -28,7 +30,7 @@ def process_image(uploaded_file, model, image_size):
     byte_stream = io.BytesIO(uploaded_file.read())
     image = Image.open(byte_stream)
     image = model.transformer(image)
-    image = image.unsqueeze(dim = 0)  # Add a batch dimension
+    image = image.unsqueeze(dim=0)  # Add a batch dimension
     output = model(image)
 
     probability = float(model.prob_func(output))
@@ -174,8 +176,10 @@ def upload_image(table_name):
         # model = otoscope_model
 
     if uploaded_file.filename != '':
-        probability, image_data = process_image(uploaded_file, model, image_size)  # Assuming process_image is adapted for PyTorch
-        save_image_to_db(user_name, image_data, probability, table_name)  # Assuming this function doesn't need to be modified
+        probability, image_data = process_image(uploaded_file, model,
+                                                image_size)  # Assuming process_image is adapted for PyTorch
+        save_image_to_db(user_name, image_data, probability,
+                         table_name)  # Assuming this function doesn't need to be modified
         response_data = {
             'probability': probability,
             'image': base64.b64encode(image_data).decode()
@@ -183,7 +187,6 @@ def upload_image(table_name):
         return jsonify(response_data)
     else:
         return {'error': 'No file uploaded'}
-
 
 
 @app.route('/check_patients_page', methods=['GET'])
@@ -200,7 +203,7 @@ def check_patients():
     table_name = request.form.get('table_name')
     # page = int(request.form.get('page', 1))  # 페이지 번호, 기본은 1
     page = 1
-    items_per_page = 5  # 페이지 당 아이템 개수, 이 값을 변경할 수 있습니다.
+    items_per_page = 6  # 페이지 당 아이템 개수, 이 값을 변경할 수 있습니다.
     doctor_id = session.get('doctor_user_name')
 
     try:
@@ -210,8 +213,6 @@ def check_patients():
             query = "SELECT * FROM patient_doctor WHERE patient_id = %s AND doctor_id = %s;"
             cursor.execute(query, (user_name, doctor_id))
             permission_result = cursor.fetchone()
-            print(user_name, doctor_id)
-            print(permission_result)
 
             if not permission_result:
                 return "You don't have permission to access this patient's records."
@@ -221,12 +222,12 @@ def check_patients():
         if not images:
             return "No records found for user " + user_name
 
-        return render_template('patient_images.html', user_name=user_name, images=images, current_page=page, table_name=table_name, items_per_page=items_per_page)
+        return render_template('patient_images.html', user_name=user_name, images=images, current_page=page,
+                               table_name=table_name, items_per_page=items_per_page)
 
     except mysql.connector.Error as err:
         print("An error occurred:", err)
         return "An error occurred while processing your request."
-
 
 
 @app.route('/check_patients_paged', methods=['GET'])
@@ -236,19 +237,21 @@ def check_patients_paged():
     # print('table_name', table_name)
     page = int(request.args.get('page', 1))
     # print('check_patients_paged:', user_name, table_name, page)
-    items_per_page = 5  # 예시: 페이지 당 5개의 이미지
+    items_per_page = 6  # 예시: 페이지 당 5개의 이미지
 
     images = show_all_images_by_user_name_web_paged(user_name, table_name, page, items_per_page)
 
     if not images:
         return "No records found for user " + user_name
 
-    return render_template('patient_images.html', user_name=user_name, images=images, current_page=page, table_name=table_name, items_per_page=items_per_page)
+    return render_template('patient_images.html', user_name=user_name, images=images, current_page=page,
+                           table_name=table_name, items_per_page=items_per_page)
+
 
 @app.route('/give_doctor_permission', methods=['POST'])
 def give_doctor_permission():
-    patient_id = request.json.get('patient_id') #1,2,3이런거 말고 patient1이런거
-    doctor_id = request.json.get('doctor_id') #정확히는 username 입니다.
+    patient_id = request.json.get('patient_id')  # 1,2,3이런거 말고 patient1이런거
+    doctor_id = request.json.get('doctor_id')  # 정확히는 username 입니다.
 
     # Check if doctor_id exists in doctors table
     connection = mysql.connector.connect(**db_config)
@@ -281,4 +284,3 @@ if __name__ == '__main__':
     create_patient_doctor_table()
     # serve(app, host='0.0.0.0', port=5000)
     app.run(debug=True)
-
