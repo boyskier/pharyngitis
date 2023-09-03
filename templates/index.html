@@ -75,8 +75,12 @@
 </head>
 <body>
     <header>
-        <h1>Welcome to Our Medical System!</h1>
+    <h1>Welcome to Our Medical System!</h1>
+    {% if doctor_user_name %}
+        <p>Welcome! Dr.{{ doctor_user_name }}</p>
+    {% endif %}
     </header>
+
     <div class="container">
         <p>Please select an option:</p>
         <div class="options-container">

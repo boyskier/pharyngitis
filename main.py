@@ -15,10 +15,6 @@ db_config = {
     'database': os.getenv('DB_DATABASE')
 }
 
-# tf model
-# pharyngitis_model = tf.keras.models.load_model("pharyngitis_model.h5")
-# otoscope_model = tf.keras.models.load_model("otoscope_model.h5")
-
 pharyngitis_model = torch.load("google_vit-base-patch16-224_model.pth", map_location=torch.device('cpu'))
 
 
@@ -34,9 +30,6 @@ def process_image(uploaded_file, model, image_size):
     output = model(image)
 
     probability = float(model.prob_func(output))
-    # print(probability)
-    # print(type(probability))
-    # Go back to the start of the byte stream to read the image data
     byte_stream.seek(0)
     image_data = byte_stream.read()
 
@@ -50,7 +43,7 @@ app.config['SECRET_KEY'] = secret_key
 
 @app.route('/')  # endopint는 함수명인 main_page가 됨.
 def main_page():
-    return render_template('index.html')
+    return render_template('index.html', doctor_user_name=session.get('doctor_user_name'))
 
 
 @app.route('/signup', methods=['POST'])  # 회원가입 페이지
@@ -194,7 +187,7 @@ def check_patients_page():
     if 'doctor_user_name' not in session:  # 의사 정보가 세션에 없으면
         return redirect(url_for('doctor_signin_page'))  # 로그인 페이지로 리다이렉트
 
-    return render_template('select_patients.html')
+    return render_template('select_patients.html', doctor_user_name=session.get('doctor_user_name'))
 
 
 @app.route('/check_patients', methods=['POST'])
