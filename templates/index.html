@@ -53,6 +53,29 @@
             color: #fff;
             text-align: center;
             padding: 1rem 0;
+            position: relative;
+        }
+
+        #toggleDarkMode {
+            position: absolute;
+            top: 50%;
+            right: 1rem;
+            transform: translateY(-50%);
+            display: inline-block;
+            margin: 0.5rem;
+            padding: 0.4rem 0.8rem;;
+            font-size: 16px;
+            text-align: center;
+            text-decoration: none;
+            color: #333;
+            border: 1px solid #333;
+            border-radius: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        #toggleDarkMode:hover {
+            background-color: #333;
+            color: #fff;
         }
         .combined-section {
             background-color: #f7f7f7;
@@ -71,14 +94,31 @@
             color: #555;
             line-height: 1.6;
         }
+        body.dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+        body.dark-mode header {
+            background-color: #333;
+        }
+
+        body.dark-mode .combined-section {
+        background-color: #1e1e1e;
+        color: #c0c0c0;
+        }
+        .dark-mode footer {
+        background-color: #333;
+        color: #fff;
+        }
+
     </style>
 </head>
 <body>
     <header>
-    <h1>Welcome to Our Medical System!</h1>
-    {% if doctor_user_name %}
-        <p>Welcome! Dr.{{ doctor_user_name }}</p>
-    {% endif %}
+        <h1>Welcome to Our Medical System!</h1>
+        {% if doctor_user_name %}
+            <p>Welcome! Dr.{{ doctor_user_name }}</p>
+        {% endif %}
     </header>
 
     <div class="container">
@@ -99,6 +139,25 @@
     </section>
     <footer>
         <p>Contact us at contact@example.com for inquiries about the medical system.</p>
+        <button id="toggleDarkMode">Toggle Dark Mode</button>
+
     </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const toggleDarkMode = document.getElementById("toggleDarkMode");
+
+            // Local Storage에서 다크 모드 설정 불러오기
+            if (localStorage.getItem('dark-mode') === 'true') {
+                document.body.classList.add("dark-mode");
+            }
+
+            toggleDarkMode.addEventListener('click', () => {
+                document.body.classList.toggle("dark-mode");
+
+                // 다크 모드 설정 저장
+                localStorage.setItem('dark-mode', document.body.classList.contains("dark-mode"));
+            });
+        });
+    </script>
 </body>
 </html>

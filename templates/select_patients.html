@@ -79,6 +79,30 @@
         .back-to-main:hover {
             color: #0056b3;
         }
+        body.dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .dark-mode .select-form {
+            background-color: #1e1e1e;
+            color: #c0c0c0;
+        }
+
+        .dark-mode .select-form h1,
+        .dark-mode .select-form label,
+        .dark-mode .select-form p {
+            color: #c0c0c0;
+        }
+
+        .dark-mode .back-to-main {
+            color: #c0c0c0;
+        }
+
+        .dark-mode .back-to-main:hover {
+            color: #a8a8a8;
+        }
+
     </style>
 </head>
 <body>
@@ -96,6 +120,26 @@
             <input type="submit" value="Check">
         </form>
         <p><a class="back-to-main" href="{{ url_for('main_page') }}">Back to Main Page</a></p>
+        <button id="toggleDarkMode">Toggle Dark Mode</button>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleButton = document.getElementById('toggleDarkMode');
+
+            // Retrieve dark mode setting from localStorage
+            if (localStorage.getItem('dark-mode') === 'true') {
+                document.body.classList.add("dark-mode");
+            }
+
+
+            // Add click event listener to toggle dark mode
+            toggleButton.addEventListener('click', () => {
+                document.body.classList.toggle("dark-mode");
+                localStorage.setItem('dark-mode', document.body.classList.contains("dark-mode"));
+            });
+        });
+    </script>
+
+
 </body>
 </html>

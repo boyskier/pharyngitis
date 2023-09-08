@@ -47,7 +47,6 @@
             color: #fff;
             border: none;
             cursor: pointer;
-            padding: 0.5rem 1rem; /* Added padding to the submit button */
         }
         .signin-form input[type="submit"]:hover {
             background-color: #0056b3;
@@ -65,6 +64,23 @@
         .back-to-main:hover {
             color: #0056b3;
         }
+        body.dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+        .dark-mode .signin-form {
+            background-color: #333;
+            color: #fff;
+        }
+        .dark-mode .signin-form h1, .dark-mode .signin-form label, .dark-mode .signin-form p {
+            color: #ffffff;
+        }
+        .dark-mode .signin-form input[type="submit"]:hover {
+            background-color: #555;
+        }
+        .dark-mode .back-to-main, .dark-mode .back-to-main:hover {
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
@@ -73,13 +89,26 @@
         <form action="/doctor_signin" method="post">
             <label for="user_name">Username:</label>
             <input type="text" id="user_name" name="user_name" required><br>
-
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required><br>
-
             <input type="submit" value="Signin">
         </form>
         <p><a class="back-to-main" href="{{ url_for('main_page') }}">Back to Main Page</a></p>
+        <button id="toggleDarkMode">Toggle Dark Mode</button>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const toggleDarkMode = document.getElementById("toggleDarkMode");
+
+            if (localStorage.getItem('dark-mode') === 'true') {
+                document.body.classList.add("dark-mode");
+            }
+
+            toggleDarkMode.addEventListener('click', () => {
+                document.body.classList.toggle("dark-mode");
+                localStorage.setItem('dark-mode', document.body.classList.contains("dark-mode"));
+            });
+        });
+    </script>
 </body>
 </html>

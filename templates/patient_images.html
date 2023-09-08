@@ -120,8 +120,28 @@
             box-sizing: border-box;
             margin: 5px;
         }
+        body.dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
 
+        .dark-mode .image-list {
+            background-color: #1e1e1e;
+            color: #c0c0c0;
+        }
 
+        .dark-mode .image-info,
+        .dark-mode .pagination-link,
+        .dark-mode .current-page {
+            color: #c0c0c0;
+        }
+        .dark-mode .highlight {
+            color: #ffffff;
+        }
+
+        .dark-mode .image-info {
+            color: #000000;
+        }
     </style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -132,6 +152,7 @@
     <h1>{{ table_name }} <span class="highlight">Images for </span>{{ user_name }}</h1>
     <p><a href="{{ url_for('main_page') }}">Main Page</a> | <a href="{{ url_for('check_patients_page') }}">Previous
         Page</a></p>
+    <button id="toggleDarkMode">Toggle Dark Mode</button>
     <p class="image-info">The probability value is rounded to the fourth decimal place</p>
 
     <!-- 이미지 출력 -->
@@ -174,8 +195,18 @@
             openImageInNewTab(this.src);
         };
     });
+    document.addEventListener('DOMContentLoaded', () => {
+        const toggleButton = document.getElementById('toggleDarkMode');
+
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.body.classList.add("dark-mode");
+        }
+
+        toggleButton.addEventListener('click', () => {
+            document.body.classList.toggle("dark-mode");
+            localStorage.setItem('dark-mode', document.body.classList.contains("dark-mode"));
+        });
+    });
 </script>
 </body>
-</html>
-
 </html>
