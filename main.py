@@ -65,7 +65,6 @@ def signup():
         connection.close()
         return jsonify({'status': 'error', 'message': 'User ID already exists'})
 
-
     # 사용자 정보 저장
     query = f"""
         INSERT INTO userinfo (user_name, password, birth_date, gender) VALUES (%s, %s, %s, %s);
@@ -76,7 +75,6 @@ def signup():
     connection.close()
 
     return jsonify({'status': 'success', 'message': 'User registered successfully'})
-
 
 
 @app.route('/signin', methods=['POST'])
@@ -158,7 +156,7 @@ def doctor_signin():
         session['doctor_user_name'] = user_name  # 세션에 의사 정보 저장
         return redirect(url_for('check_patients_page'))
     else:
-        return jsonify({'status': 'error', 'message': 'Authentication failed'})
+        return render_template('doctor_signin_fail.html', message='Authentication failed')
 
 
 @app.route('/upload/<table_name>', methods=['POST'])
