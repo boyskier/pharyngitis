@@ -65,6 +65,7 @@ def signup():
         connection.close()
         return jsonify({'status': 'error', 'message': 'User ID already exists'})
 
+
     # 사용자 정보 저장
     query = f"""
         INSERT INTO userinfo (user_name, password, birth_date, gender) VALUES (%s, %s, %s, %s);
@@ -75,6 +76,7 @@ def signup():
     connection.close()
 
     return jsonify({'status': 'success', 'message': 'User registered successfully'})
+
 
 
 @app.route('/signin', methods=['POST'])
@@ -101,13 +103,16 @@ def doctor_signup_page():
     return render_template('doctor_signup.html')
 
 
+# change to get liscence card
 @app.route('/doctor_signup', methods=['POST'])  # 의사 회원가입 페이지
 def doctor_signup():
     # 클라이언트로부터 정보 받기
     user_name = request.form.get('user_name')
     password = request.form['password'].encode('utf-8')  # 인코딩
     hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())  # 해싱
-    licence = request.form['licence']
+    licence_image = request.files['licence']
+    licence = licence_image.read()
+    base64_liscence = base64.b64encode(licence).decode('utf-8')
 
     # 의사 ID 중복 확인
     connection = mysql.connector.connect(**db_config)
@@ -117,18 +122,18 @@ def doctor_signup():
 
     if result:
         connection.close()
-        return jsonify({'status': 'error', 'message': 'User ID already exists'})
+        return render_template('signup_error_page.html', message='User ID already exists')
 
     # 의사 정보 저장
     query = f"""
         INSERT INTO doctors (user_name, password, licence) VALUES (%s, %s, %s);
         """
-    cursor.execute(query, (user_name, hashed_password, licence))
+    cursor.execute(query, (user_name, hashed_password, base64_liscence))
     connection.commit()
     cursor.close()
     connection.close()
 
-    return jsonify({'status': 'success', 'message': 'Doctor registered successfully'})
+    return render_template('signup_success_page.html', message='User registered successfully')
 
 
 @app.route('/doctor_signin_page', methods=['GET'])

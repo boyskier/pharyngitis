@@ -71,7 +71,8 @@ def create_doctors_table():  # doctors라는 table에 의사 정보 저장
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_name VARCHAR(255) UNIQUE,
         password VARCHAR(255),
-        licence VARCHAR(8)
+        licence MEDIUMBLOB,
+        permission INT DEFAULT 0
     );
     """
 

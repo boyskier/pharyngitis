@@ -92,14 +92,14 @@
 <body>
     <div class="signup-form">
         <h1>Doctor Signup</h1>
-        <form action="/doctor_signup" method="post">
+        <form action="/doctor_signup" method="post" enctype="multipart/form-data">
             <p class="instruction">Please enter your desired username. This will be used to log in.</p>
             <label for="user_name">Username:</label>
             <input type="text" id="user_name" name="user_name" required><br>
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required><br>
             <label for="licence">Medical Licence:</label>
-            <input type="text" id="licence" name="licence" required><br>
+            <input type="file" id="licence" name="licence" accept="image/*" required><br>
             <input type="submit" value="Signup">
         </form>
         <p><a class="back-to-main" href="{{ url_for('main_page') }}">Back to Main Page</a></p>
