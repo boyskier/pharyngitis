@@ -4,7 +4,7 @@ from PIL import Image
 import io
 
 
-def to_server(user_name='patient1', img_path='sample_images/2.JPG', mode='pharyngitis'):  # mode: pharyngitis, otscope
+def to_server(user_name='patient11', img_path='sample_images/2.JPG', mode='pharyngitis'):  # mode: pharyngitis, otscope
     url = f"http://localhost:5000/upload/{mode}"
     data = {'user_name': user_name}
     files = {'file': open(img_path, 'rb')}
@@ -24,4 +24,4 @@ def to_server(user_name='patient1', img_path='sample_images/2.JPG', mode='pharyn
         print(f"Error: {response.text}")
 
 
-to_server(user_name='patient2', img_path='sample_images/150.jpg', mode='pharyngitis')
+to_server(user_name='patient11', img_path='sample_images/2.jpg', mode='pharyngitis')
