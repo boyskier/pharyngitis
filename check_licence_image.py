@@ -57,17 +57,3 @@ if __name__ == '__main__':
     print('app')
     approve_doctor()
 
-# if not os.path.exists('DB_image_data/licence'):
-#     os.makedirs('DB_image_data/licence')
-# # get licence image and plot
-# for i, (user_name, licence) in enumerate(all_results):
-#     file_name = f"licence_{user_name}_{i}.jpg"
-#     file_path = os.path.join(f'DB_image_data/licence', file_name)
-#     try:
-#         licence_decoded = base64.b64decode(licence)
-#
-#         image = Image.open(io.BytesIO(licence_decoded))
-#         image.save(file_path)
-#         print(f"Image saved at {file_path}")
-#     except:
-#         print(f"Image not saved at {file_path}")
