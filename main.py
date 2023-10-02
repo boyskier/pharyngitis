@@ -16,9 +16,8 @@ db_config = {
 }
 
 pharyngitis_model = torch.load("google_vit-base-patch16-224_model.pth", map_location=torch.device('cpu'))
+otoscope_model = torch.load("alexnet_model.pth", map_location=torch.device('cpu'))
 
-
-# otoscope_model = torch.load("alexnet_model.pth")
 
 def process_image(uploaded_file, model, image_size):
     model.to("cpu")
@@ -81,14 +80,12 @@ def signup():
 def signin():
     user_name = request.json.get('user_name')
     password = request.json.get('password').encode('utf-8')  # 인코딩
-
     # 데이터베이스에서 사용자 정보 조회
     connection = mysql.connector.connect(**db_config)
     cursor = connection.cursor()
     cursor.execute(f"SELECT password FROM userinfo WHERE user_name = %s", (user_name,))
     result = cursor.fetchone()
     connection.close()
-
     # ID와 비밀번호 검증 (해싱된 비밀번호와 비교)
     if result and bcrypt.checkpw(password, result[0].encode('utf-8')):
         return jsonify({'status': 1})  # 인증 성공
@@ -101,7 +98,6 @@ def doctor_signup_page():
     return render_template('doctor_signup.html')
 
 
-# change to get liscence card
 @app.route('/doctor_signup', methods=['POST'])  # 의사 회원가입 페이지
 def doctor_signup():
     # 클라이언트로부터 정보 받기
@@ -169,7 +165,7 @@ def upload_image(table_name):
         model = pharyngitis_model
     else:
         image_size = (224, 224)
-        # model = otoscope_model
+        model = otoscope_model
 
     if uploaded_file.filename != '':
         probability, image_data = process_image(uploaded_file, model,
@@ -278,5 +274,5 @@ if __name__ == '__main__':
     create_userinfo_table()
     create_doctors_table()
     create_patient_doctor_table()
-    # serve(app, host='0.0.0.0', port=5000)
-    app.run(debug=True)
+    serve(app, host='0.0.0.0', port=5000)
+    # app.run(debug=True)
